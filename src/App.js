@@ -25,10 +25,19 @@ class App extends Component {
     this.getConversations();
   }
 
-  selectConversation = (currentConversationId) => {
-    const { conversationsById } = this.state;
+  // Promisified setState to allow for use with async/await
+  syncronousSetState = (args = {}) => {
+    return new Promise ((resolve, reject) => {
+      this.setState(args, () => {
+        resolve();
+      })
+    })
+  }
 
+  selectConversation = (currentConversationId) => {
     this.setState({ currentConversationId });
+
+    const { conversationsById } = this.state;
 
     // Get messages if we haven't already
     if (!conversationsById[currentConversationId].messageIds) {
@@ -37,15 +46,18 @@ class App extends Component {
   }
 
   updateMessageInput = (message, conversationId) => {
-    const { conversationsById } = this.state;
-    this.setState({
-      conversationsById: {
-        ...conversationsById,
-        [conversationId]: {
-          ...conversationsById[conversationId],
-          messageInput: message
+    this.setState((state, props) => {
+      const { conversationsById } = state;
+
+      return {
+        conversationsById: {
+          ...conversationsById,
+          [conversationId]: {
+            ...conversationsById[conversationId],
+            messageInput: message
+          }
         }
-      }
+      };
     })
   }
 
@@ -55,71 +67,83 @@ class App extends Component {
   }
 
   getMessages = async (conversationId) => {
-    let { conversationsById, messagesById: oldMessagesById } = this.state;
-    const conversation = conversationsById[conversationId];
+    // First set messagesLoading state on the conversation
+    await this.syncronousSetState((state, props) => {
+      const { conversationsById } = state;
+      const conversation = conversationsById[conversationId];
 
-    this.setState({
-      conversationsById: {
+      return {
+        conversationsById: {
+          ...conversationsById,
+          [conversationId]: {
+            ...conversation,
+            messagesLoading: true
+          }
+        }
+      };
+    })
+
+    // Get the messages
+    const { messagesById, messageIds } = await getMessages(conversationId);
+
+    // Update state with the new messages
+    this.setState((state, props) => {
+      const { conversationsById, messagesById: oldMessagesById } = state;
+      const conversation = conversationsById[conversationId];
+
+      // Add messages to Message store
+      const newMessagesById = {
+        ...oldMessagesById,
+        ...messagesById
+      };
+
+      // Add message ids to conversation and remove the messagesLoading state
+      const newConversationsById = {
         ...conversationsById,
         [conversationId]: {
           ...conversation,
-          messagesLoading: true
+          messagesLoading: false,
+          messageIds
         }
+      };
+
+      return {
+        messagesById: newMessagesById,
+        conversationsById: newConversationsById
       }
-    })
-
-    const { messagesById, messageIds } = await getMessages(conversationId);
-    ({ conversationsById, messagesById: oldMessagesById } = this.state);
-
-    // Add messages to Message store
-    const newMessagesById = {
-      ...oldMessagesById,
-      ...messagesById
-    };
-
-    // Add message ids to conversation
-    const newConversationsById = {
-      ...conversationsById,
-      [conversationId]: {
-        ...conversation,
-        messagesLoading: false,
-        messageIds
-      }
-    };
-
-    this.setState({
-      messagesById: newMessagesById,
-      conversationsById: newConversationsById
     });
   }
 
   addMessageToConversation = ({ message, id }) => {
-    const { messagesById, conversationsById } = this.state;
     const newMessage = createNewMessage(message);
 
-    // Add message to Message store
-    const newMessagesById = {
-      ...messagesById,
-      [newMessage.id]: newMessage
-    }
+    this.setState((state, props) => {
+      const { messagesById, conversationsById } = state;
 
-    // Add message id to conversation
-    const newConversationsById = {
-      ...conversationsById,
-      [id]: {
-        ...conversationsById[id],
-        lastMessageTruncated: message,
-        messageInput: '',
-        messageIds: [
-          ...((conversationsById[id] && conversationsById[id].messageIds) || []),
-          newMessage.id
-        ]
+      // Add message to Message store
+      const newMessagesById = {
+        ...messagesById,
+        [newMessage.id]: newMessage
       }
-    }
 
-    this.setState({
-      messagesById: newMessagesById,
-      conversationsById: newConversationsById
+      // Add message id to conversation
+      const newConversationsById = {
+        ...conversationsById,
+        [id]: {
+          ...conversationsById[id],
+          lastMessageTruncated: message,
+          messageInput: '',
+          messageIds: [
+            ...((conversationsById[id] && conversationsById[id].messageIds) || []),
+            newMessage.id
+          ]
+        }
+      }
+
+      return {
+        messagesById: newMessagesById,
+        conversationsById: newConversationsById
+      }
     })
   }
 
