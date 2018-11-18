@@ -3,8 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "normalizr": "^3.3.0",
     "react": "^16.6.3",
-    "react-dom": "^16.6.3"
+    "react-dom": "^16.6.3",
+    "react-lines-ellipsis": "^0.13.2",
+    "recompose": "^0.30.0",
+    "styled-components": "^4.1.1",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "react-scripts": "2.1.1"
