@@ -1,4 +1,5 @@
 import React from 'react';
+import { pure } from 'recompose';
 import styled from 'styled-components';
 import ConversationListElement from './ConversationListElement';
 
@@ -9,7 +10,7 @@ const ConversationListStyled = styled.div`
   overflow-y: scroll;
 `;
 
-const ConversationList = (props) => {
+const ConversationList = pure((props) => {
   console.log('rendering conversation list')
 
   const {
@@ -25,13 +26,15 @@ const ConversationList = (props) => {
       {conversations.map(conversation => (
         <ConversationListElement
           key={conversation.id}
-          conversation={conversation}
+          id={conversation.id}
+          business={conversation.business}
+          lastMessage={conversation.lastMessageTruncated}
           active={currentConversationId === conversation.id}
           selectConversation={selectConversation}
         />
       ))}
     </ConversationListStyled>
   )
-}
+})
 
 export default ConversationList;

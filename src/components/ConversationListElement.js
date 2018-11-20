@@ -25,25 +25,27 @@ const ConversationListElementStyled = styled.div`
 
 const ConversationListElement = pure((props) => {
   const {
-    conversation,
+    id,
+    business,
+    lastMessage,
     active,
     selectConversation
   } = props;
 
-  console.log(`rendering list element ${conversation.id}`);
+  console.log(`rendering list element ${id}`);
   return (
     <ConversationListElementStyled
-      onClick={() => selectConversation(conversation.id)}
+      onClick={() => selectConversation(id)}
       active={active}
     >
       <Avatar
-        alt={conversation.business.name}
-        src={conversation.business.avatar}
+        alt={business.name}
+        src={business.avatar}
       />
       <div>
-        <b>{conversation.business.name}</b>
+        <b>{business.name}</b>
         <LinesEllipsis
-          text={conversation.lastMessageTruncated}
+          text={lastMessage}
           maxLine={1}
         />
       </div>

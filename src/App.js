@@ -118,7 +118,7 @@ class App extends Component {
     const newMessage = createNewMessage(message);
 
     this.setState((state, props) => {
-      const { messagesById, conversationsById } = state;
+      const { messagesById, conversationsById, conversationIds } = state;
 
       // Add message to Message store
       const newMessagesById = {
@@ -140,9 +140,16 @@ class App extends Component {
         }
       }
 
+      // Reorder conversations, so that latest message is first
+      const newConversationIds = [
+        id,
+        ...conversationIds.filter(conversationId => conversationId !== id)
+      ]
+
       return {
         messagesById: newMessagesById,
-        conversationsById: newConversationsById
+        conversationsById: newConversationsById,
+        conversationIds: newConversationIds
       }
     })
   }
